@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class ="mb-5 text-center">{{ question.question_text }}</h1>
+
+<a class ="btn btn-secondary" href ="{% url 'polls:index' %}">Back To Polls</a>
+{% endblock %}
