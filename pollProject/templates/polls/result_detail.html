@@ -11,5 +11,10 @@
     {% endfor %}
 </ul>
 
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" name="reset_votes">Reset Votes</button>
+</form>
+
 <a class="btn btn-secondary" href="{% url 'polls:index' %}">Back To Polls</a>
 {% endblock %}

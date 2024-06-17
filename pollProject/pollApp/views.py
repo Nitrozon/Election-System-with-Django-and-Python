@@ -33,9 +33,7 @@ def vote(request, question_id):
     try:
         selected_choice = question.choice_set.get(pk = request.POST['choice'])
     except (KeyError, Choice.DoesNotExist):
-        return render(request, 'polls/detail.html', 
-                      { 'question': question,
-                        'error_message': 'You did not select a choice.'})
+        return render(request, 'polls/detail.html', {'question': question, 'error_message': 'You did not select a choice.'})
     else:
         selected_choice.votes += 1
         selected_choice.save()
@@ -43,5 +41,10 @@ def vote(request, question_id):
 
 def results_detail(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
+    if request.method == 'POST' and 'reset_votes' in request.POST:
+        for choice in question.choice_set.all():
+            choice.votes = 0
+            choice.save()
+        return HttpResponseRedirect(reverse('polls:results_detail', args=(question.id,)))
     return render(request, 'polls/result_detail.html', {'question': question})
     
