@@ -46,9 +46,10 @@ python manage.py createsuperuser
 ```
 5.Run the development server:
 ```
+cd pollProject
 python manage.py runserver 0.0.0.0:8000
 ```
-6.Obtain ip adress from terminal:
+6.Obtain ip address from terminal:
 Run the following command in the command line / terminal:
 ```
 ipconfig
