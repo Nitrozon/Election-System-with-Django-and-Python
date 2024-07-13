@@ -28,7 +28,7 @@ SECRET_KEY = "KEY@#^@!&@!&../;'"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.1.2"]
+ALLOWED_HOSTS = ["192.168.1.2", "127.0.0.1"]
 
 
 # Application definition
@@ -41,8 +41,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'pollApp',
-    'landingPage'
+    'landingPage',
+    'accounts',
 ]
+
+LOGIN_URL = 'login'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
