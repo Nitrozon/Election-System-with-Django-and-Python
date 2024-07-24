@@ -22,7 +22,7 @@ def login_view(request):
 @login_required
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect('polls:admission_login')
 
 
 def signup_view(request):
@@ -35,3 +35,4 @@ def signup_view(request):
     else:
         form = UserCreationForm()
     return render(request, 'signup.html', {'form': form})
+

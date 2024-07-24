@@ -45,6 +45,11 @@ INSTALLED_APPS = [
     'accounts',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Keep the default backend
+    'pollApp.custom_auth.AdmissionNumberBackend',  # Add your custom backend
+]
+
 LOGIN_URL = 'login'
 
 MIDDLEWARE = [

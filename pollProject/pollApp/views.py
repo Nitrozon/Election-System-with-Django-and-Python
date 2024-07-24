@@ -1,12 +1,15 @@
 import csv
+import io
 
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.http import Http404
 from django.contrib.auth.decorators import login_required
 
-from .forms import UploadCSVForm
+from .forms import UploadCSVForm, AdmissionNumberLoginForm
 from .models import Question, Choice, Voters
 
 # Get questions and display those questions
@@ -32,16 +35,25 @@ def results(request, question_id):
     return render(request, 'polls/results.html', {'question': question})
 
 # Vote for a question choice
+
+
 @login_required
 def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     user = request.user
 
     # Check if the user has already voted for this question
-    if Choice.objects.filter(question=question, voted_users=user).exists():
+    try:
+        voter = Voters.objects.get(user=user)
+        if voter.voted_questions.filter(pk=question_id).exists():
+            return render(request, 'polls/detail.html', {
+                'question': question,
+                'error_message': 'You have already voted on this question.'
+            })
+    except Voters.DoesNotExist:
         return render(request, 'polls/detail.html', {
             'question': question,
-            'error_message': 'You have already voted.'
+            'error_message': 'Voter not found.'
         })
 
     try:
@@ -56,6 +68,10 @@ def vote(request, question_id):
         selected_choice.voted_users.add(user)  # Add the user to the voted_users field
         selected_choice.save()
 
+        # Mark the user as having voted for this question
+        voter.voted_questions.add(question)
+        voter.save()
+
         return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
 
 @login_required
@@ -69,29 +85,48 @@ def results_detail(request, question_id):
     return render(request, 'polls/result_detail.html', {'question': question})
 
 
-class Voter:
-    pass
 
-
-@login_required
 def upload_csv(request):
+    if request.method == "POST":
+        csv_file = request.FILES["csv_file"]
+
+        if not csv_file.name.endswith('.csv'):
+            return render(request, 'polls/upload_csv.html', {
+                'error_message': 'The uploaded file is not a CSV file.'
+            })
+
+        data_set = csv_file.read().decode('UTF-8')
+        io_string = io.StringIO(data_set)
+
+        for row in csv.reader(io_string, delimiter=',', quotechar="|"):
+            admission_no = row[0]
+            name = row[1]
+            class_name = row[2]
+
+            user = User.objects.create_user(username=admission_no, password=admission_no)
+            Voters.objects.create(
+                user=user,
+                admission_no=admission_no,
+                name=name,
+                class_name=class_name
+            )
+
+        return HttpResponseRedirect(reverse('polls:index'))
+
+    return render(request, 'polls/upload_csv.html')
+
+
+def admission_login(request):
     if request.method == 'POST':
-        form = UploadCSVForm(request.POST, request.FILES)
+        form = AdmissionNumberLoginForm(request.POST)
         if form.is_valid():
-            csv_file = request.FILES['csv_file']
-            decoded_file = csv_file.read().decode('utf-8').splitlines()
-            reader = csv.reader(decoded_file, delimiter=',')
-            next(reader)  # Skip the header row
-            for row in reader:
-                admission_no = row[0]
-                name = row[1]
-                class_name = row[2]
-                has_voted = row[3].lower() == 'true'
-                voter_instance, created = Voters.objects.update_or_create(
-                    admission_no=admission_no,
-                    defaults={'name': name, 'class_name': class_name, 'has_voted': has_voted}
-                )
-            return redirect('polls:upload_csv')
+            admission_no = form.cleaned_data['admission_no']
+            user = authenticate(request, admission_no=admission_no)
+            if user is not None:
+                login(request, user)
+                return redirect('index')
+            else:
+                return HttpResponse("Invalid Admission Number")
     else:
-        form = UploadCSVForm()
-    return render(request, 'polls/upload_csv.html', {'form': form})
+        form = AdmissionNumberLoginForm()
+    return render(request, 'polls/admission_login.html', {'form': form})

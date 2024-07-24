@@ -10,4 +10,5 @@ urlpatterns = [
     path('<int:question_id>/vote/', views.vote, name='vote'),
     path('<int:question_id>/results/detail/', views.results_detail, name='results_detail'),
     path('upload_csv/', views.upload_csv, name='upload_csv'),
+    path('admission_login/', views.admission_login, name='admission_login'),
 ]
